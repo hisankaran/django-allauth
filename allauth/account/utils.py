@@ -1,5 +1,4 @@
-import hashlib
-import random
+import hashlib, random, json
 
 from datetime import timedelta
 try:
@@ -13,7 +12,7 @@ from django.shortcuts import render
 from django.conf import settings
 from django.contrib.auth import login
 from django.utils.translation import ugettext_lazy as _, ugettext
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.utils.http import urlencode
 from django.utils.datastructures import SortedDict
 try:
@@ -122,7 +121,11 @@ def perform_login(request, user, email_verification, redirect_url=None):
     messages.add_message(request, messages.SUCCESS,
                          ugettext("Successfully signed in as %(user)s.") % { "user": user_display(user) } )
 
-    return HttpResponseRedirect(get_login_redirect_url(request, redirect_url))
+    if request.is_ajax():
+        payload = {'success': True, 'next': get_login_redirect_url(request, redirect_url)}
+        return HttpResponse(json.dumps(payload), content_type='application/json')
+    else:
+        return HttpResponseRedirect(get_login_redirect_url(request, redirect_url))
 
 
 def complete_signup(request, user, email_verification, success_url, signal_kwargs={}):

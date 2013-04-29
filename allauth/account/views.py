@@ -1,6 +1,7 @@
+import json
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils.http import base36_to_int
@@ -59,12 +60,34 @@ class LoginView(RedirectAuthenticatedUserMixin, FormView):
         success_url = self.get_success_url()
         return form.login(self.request, redirect_url=success_url)
 
+    def form_invalid(self, form, *args, **kwargs):
+        """
+        The Form is invalid
+        """
+        if len(form.errors) == 1:
+            payload = {'success': False, 'errors': dict(form.errors.items())['__all__'][0]}
+        else:
+            payload = {'success': False, 'errors': dict(form.errors.items())}
+        
+
+        if self.request.is_ajax():
+            return HttpResponse(json.dumps(payload), content_type='application/json')
+        else:
+            return super(LoginView, self).form_invalid(form, *args, **kwargs)
+
     def get_success_url(self):
         # Explicitly passed ?next= URL takes precedence
         ret = (get_next_redirect_url(self.request, 
                                      self.redirect_field_name)
                or self.success_url)
         return ret
+
+    def get_form_kwargs(self):
+         kwargs = super(LoginView, self).get_form_kwargs()
+         # kwargs.update({
+         #     'request' : self.request
+         # })
+         return kwargs
 
     def get_context_data(self, **kwargs):
         ret = super(LoginView, self).get_context_data(**kwargs)
@@ -123,8 +146,26 @@ class SignupView(RedirectAuthenticatedUserMixin, CloseableSignupMixin, FormView)
     def form_valid(self, form):
         user = form.save(self.request)
         return complete_signup(self.request, user, 
-                               app_settings.EMAIL_VERIFICATION,
-                               self.get_success_url())
+                                   app_settings.EMAIL_VERIFICATION,
+                                   self.get_success_url())
+
+    def form_invalid(self, form, *args, **kwargs):
+        """
+        The Form is invalid
+        """
+        payload = {'success': False, 'errors':dict(form.errors.items())}
+
+        if self.request.is_ajax():
+            return HttpResponse(json.dumps(payload), content_type='application/json')
+        else:
+            return super(SignupView, self).form_invalid(form, *args, **kwargs)
+
+    def get_form_kwargs(self):
+         kwargs = super(SignupView, self).get_form_kwargs()
+         kwargs.update({
+             'request' : self.request
+         })
+         return kwargs
 
     def get_context_data(self, **kwargs):
         ret = super(SignupView, self).get_context_data(**kwargs)

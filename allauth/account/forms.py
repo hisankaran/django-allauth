@@ -1,4 +1,6 @@
+import json
 from django import forms
+from django.http import HttpResponse
 from django.core.urlresolvers import reverse
 from django.core import exceptions
 from django.db.models import Q
@@ -205,7 +207,7 @@ class BaseSignupForm(_base_signup_form_class()):
     
     def create_user(self, commit=True):
         if app_settings.USERNAME_REQUIRED:
-            username = self.cleaned_data["username"]
+            username = self.cleaned_data["username"].lower()
         else:
             username = None
         data = self.initial
@@ -228,7 +230,8 @@ class SignupForm(BaseSignupForm):
         required = False,
         widget = forms.HiddenInput())
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, request, *args, **kwargs):
+        self.request = request
         kwargs['email_required'] = app_settings.EMAIL_REQUIRED
         super(SignupForm, self).__init__(*args, **kwargs)
         current_order =self.fields.keyOrder
@@ -257,6 +260,8 @@ class SignupForm(BaseSignupForm):
     def create_user(self, commit=True):
         user = super(SignupForm, self).create_user(commit=False)
         password = self.cleaned_data.get("password1")
+        user.first_name = self.request.POST.get("first_name", None)
+        user.last_name = self.request.POST.get("last_name", None)
         if password:
             user.set_password(password)
         if commit:
