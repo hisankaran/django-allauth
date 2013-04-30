@@ -40,7 +40,11 @@ class RedirectAuthenticatedUserMixin(object):
         self.request = request
         # (end WORKAROUND)
         if request.user.is_authenticated():
-            return HttpResponseRedirect(self.get_authenticated_redirect_url())
+            if request.is_ajax():
+                payload = {'success': True, 'user': {'name': "%s" % (request.user.get_full_name() or request.user), 'id': request.user.id}}
+                return HttpResponse(json.dumps(payload), content_type='application/json')
+            else:
+                return HttpResponseRedirect(self.get_authenticated_redirect_url())
         return super(RedirectAuthenticatedUserMixin, self).dispatch(request,
                                                                     *args,
                                                                     **kwargs)
@@ -65,7 +69,7 @@ class LoginView(RedirectAuthenticatedUserMixin, FormView):
         The Form is invalid
         """
         if len(form.errors) == 1:
-            payload = {'success': False, 'errors': dict(form.errors.items())['__all__'][0]}
+            payload = {'success': False, 'errors': dict(form.errors.items())}
         else:
             payload = {'success': False, 'errors': dict(form.errors.items())}
         

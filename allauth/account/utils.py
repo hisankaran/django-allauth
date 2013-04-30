@@ -121,8 +121,9 @@ def perform_login(request, user, email_verification, redirect_url=None):
     messages.add_message(request, messages.SUCCESS,
                          ugettext("Successfully signed in as %(user)s.") % { "user": user_display(user) } )
 
+    print user
     if request.is_ajax():
-        payload = {'success': True, 'next': get_login_redirect_url(request, redirect_url)}
+        payload = {'success': True, 'user': {'name': "%s" % (request.user.get_full_name() or request.user), 'id': request.user.id}}
         return HttpResponse(json.dumps(payload), content_type='application/json')
     else:
         return HttpResponseRedirect(get_login_redirect_url(request, redirect_url))
