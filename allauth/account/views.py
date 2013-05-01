@@ -488,7 +488,11 @@ class LogoutView(TemplateResponseMixin, View):
         url = self.get_redirect_url()
         if self.request.user.is_authenticated():
             self.logout()
-        return redirect(url)
+        if self.request.is_ajax():
+            payload = {'success': True, 'user': None}
+            return HttpResponse(json.dumps(payload), content_type='application/json')
+        else:
+            return redirect(url)
     
     def logout(self):
         messages.add_message(self.request, messages.SUCCESS,

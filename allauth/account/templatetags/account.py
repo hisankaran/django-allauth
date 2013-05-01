@@ -1,5 +1,5 @@
 from django import template
-
+import md5
 from allauth.account.utils import user_display
 
 register = template.Library()
@@ -45,3 +45,7 @@ def do_user_display(parser, token):
         raise template.TemplateSyntaxError("'%s' takes either two or four arguments" % bits[0])
     
     return UserDisplayNode(user, as_var)
+
+@register.simple_tag
+def user_avatar(email="sankaran@rightbuy.com", size=64):
+  return "//en.gravatar.com/avatar/%s?s=%d" % (md5.new("%s" % (email)).hexdigest(), size)
