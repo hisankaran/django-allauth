@@ -1,4 +1,4 @@
-import hashlib, random, json, md5
+import hashlib, random, json, hashlib
 
 from datetime import timedelta
 try:
@@ -126,7 +126,7 @@ def perform_login(request, user, email_verification, redirect_url=None):
                     'success': True, 
                     'user': {
                             'name': "%s" % (request.user.get_full_name() or request.user),
-                            'avatar': "//en.gravatar.com/avatar/%s" % (md5.new("%s" % (user.email or "sankaran@rightbuy.com")).hexdigest()),
+                            'avatar': "//en.gravatar.com/avatar/%s" % (hashlib.md5("%s" % (user.email or "sankaran@rightbuy.com")).hexdigest()),
                             'id': request.user.id
                     }
                 }

@@ -1,5 +1,5 @@
 from django import template
-import md5
+import hashlib
 from allauth.account.utils import user_display
 
 register = template.Library()
@@ -48,4 +48,4 @@ def do_user_display(parser, token):
 
 @register.simple_tag
 def user_avatar(email="sankaran@rightbuy.com", size=64):
-  return "//en.gravatar.com/avatar/%s?s=%d" % (md5.new("%s" % (email)).hexdigest(), size)
+  return "//en.gravatar.com/avatar/%s?s=%d" % (hashlib.md5(email).hexdigest(), size)
